@@ -1,8 +1,6 @@
-using Content.Server._CE.ZLevels.Components;
-using Content.Server.Station.Events;
+using Content.Server.GameTicking;
 using Content.Server.Station.Systems;
 using Content.Shared._CE.ZLevels.EntitySystems;
-using Content.Shared.Station.Components;
 using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization.Systems;
 
@@ -14,54 +12,45 @@ public sealed partial class CEZLevelsSystem : CESharedZLevelsSystem
     [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
     [Dependency] private readonly TransformSystem _transform = default!;
+    [Dependency] private readonly MetaDataSystem _meta = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         InitView();
 
-        SubscribeLocalEvent<CEStationZLevelsComponent, StationPostInitEvent>(OnStationPostInit);
+        SubscribeLocalEvent<PostGameMapLoad>(OnGameMapLoad);
     }
 
-    private void OnStationPostInit(Entity<CEStationZLevelsComponent> ent, ref StationPostInitEvent args)
+    private void OnGameMapLoad(PostGameMapLoad ev)
     {
-        if (ent.Comp.ZLevelsInitialized)
+        if (ev.GameMap.ZLevels.Count == 0)
             return;
-
-        var defaultMap = _station.GetLargestGrid(ent.Owner);
-        if (defaultMap is null)
-        {
-            Log.Error($"Failed to init CEStationZLevelsSystem: defaultMap is null");
-            return;
-        }
 
         var stationNetwork = CreateZNetwork();
+        _meta.SetEntityName(stationNetwork, $"Station z-Network: {ev.GameMap.MapName}");
 
-        TryAddMapIntoZNetwork(stationNetwork, defaultMap.Value, ent.Comp.DefaultMapLevel);
+        var mainMap = _map.GetMap(ev.Map);
+        Dictionary<EntityUid, int> dict = new();
+        dict.Add(mainMap, 0);
 
-        ent.Comp.ZLevelsInitialized = true;
+        EntityManager.AddComponents(mainMap, ev.GameMap.ZLevelsComponentOverrides);
 
-        foreach (var (depth, map) in ent.Comp.Levels)
+        foreach (var (depth, path) in ev.GameMap.ZLevels)
         {
-            if (map.Path is null)
-            {
-                Log.Error($"path {map.Path.ToString()} for CEStationZLevelsSystem at level {depth} don't exist!");
-                continue;
-            }
-
-            if (!_mapLoader.TryLoadMap(map.Path.Value, out var mapEnt, out _))
+            if (!_mapLoader.TryLoadMap(path, out var mapEnt, out _))
             {
                 Log.Error($"Failed to load map for Station ZLevelNetwork at depth {depth}!");
                 continue;
             }
 
             Log.Info($"Created map {mapEnt.Value.Comp.MapId} for CEStationZLevelsSystem at level {depth}");
-
+            EntityManager.AddComponents(mapEnt.Value, ev.GameMap.ZLevelsComponentOverrides);
             _map.InitializeMap(mapEnt.Value.Comp.MapId);
-            var member = EnsureComp<StationMemberComponent>(mapEnt.Value);
-            member.Station = ent;
-
-            TryAddMapIntoZNetwork(stationNetwork, mapEnt.Value, depth);
+            //var member = EnsureComp<StationMemberComponent>(mapEnt.Value); todo: station membership
+            dict.Add(mapEnt.Value, depth);
         }
+
+        TryAddMapsIntoZNetwork(stationNetwork, dict);
     }
 }

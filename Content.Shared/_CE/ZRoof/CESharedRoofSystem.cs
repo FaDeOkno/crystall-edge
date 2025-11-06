@@ -1,5 +1,6 @@
 using Content.Shared._CE.ZLevels;
 using Content.Shared._CE.ZLevels.EntitySystems;
+using Content.Shared.Light.Components;
 using Content.Shared.Light.EntitySystems;
 using Robust.Shared.Map.Components;
 
@@ -13,27 +14,61 @@ public abstract class CESharedRoofSystem : EntitySystem
 {
     [Dependency] protected readonly CESharedZLevelsSystem ZLevel = default!;
     [Dependency] protected readonly SharedRoofSystem Roof = default!;
+    [Dependency] protected readonly SharedMapSystem Map = default!;
 
     protected EntityQuery<MapGridComponent> GridQuery;
+    protected EntityQuery<RoofComponent> RoofQuery;
 
     public override void Initialize()
     {
         base.Initialize();
 
         GridQuery = GetEntityQuery<MapGridComponent>();
+        RoofQuery = GetEntityQuery<RoofComponent>();
 
         SubscribeLocalEvent<CEZLevelMapComponent, TileChangedEvent>(OnTileChanged);
     }
 
+    /// <summary>
+    /// When changing tiles, we iteratively go down to the end of the ZLevels network, repeatedly calculating whether the tiles at the bottom now have a roof or not.
+    /// </summary>
     private void OnTileChanged(Entity<CEZLevelMapComponent> ent, ref TileChangedEvent args)
     {
-        if (!ZLevel.TryMapDown((ent.Owner, ent.Comp), out var belowMapUid))
+        if (!GridQuery.TryComp(ent, out var currentMapGrid))
+            return;
+        if (!RoofQuery.TryComp(ent, out var currentRoof))
             return;
 
-        //Update rooving below map
+        if (args.Changes.Length == 0)
+            return;
+
+        Dictionary<Vector2i, bool> roofMap = new();
         foreach (var change in args.Changes)
         {
-            Roof.SetRoof(belowMapUid.Value.Owner, change.GridIndices, !change.NewTile.IsEmpty);
+            var roovedAbove = Roof.IsRooved((ent, currentMapGrid, currentRoof), change.GridIndices);
+            var roovedTile = !change.NewTile.IsEmpty;
+            roofMap.Add(change.GridIndices, roovedAbove || roovedTile);
+        }
+
+        var mapsBelow = ZLevel.GetAllMapsBelow(ent);
+
+        if (mapsBelow.Count == 0)
+            return;
+
+        foreach (var mapBelow in mapsBelow)
+        {
+            if (!GridQuery.TryComp(mapBelow, out var mapGridBelow))
+                continue;
+
+            var roofBelow = EnsureComp<RoofComponent>(mapBelow);
+
+            foreach (var (indices, rooved) in roofMap)
+            {
+                Roof.SetRoof((mapBelow, mapGridBelow, roofBelow), indices, rooved);
+
+                if (Map.TryGetTile(mapGridBelow, indices, out var tile) && !tile.IsEmpty)
+                    roofMap[indices] = true;
+            }
         }
     }
 }
