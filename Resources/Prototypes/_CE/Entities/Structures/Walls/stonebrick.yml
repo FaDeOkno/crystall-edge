@@ -1,7 +1,7 @@
 # Stone brick
 
 - type: entity
-  id: CEWallFrameStonebrick
+  id: CEWallFrameStoneBrick
   name: stone brick wall base
   parent: CEBaseWallFrame
   components:
@@ -11,9 +11,33 @@
   - type: Icon
     sprite: _CE/Structures/Walls/bricks_stone_wall.rsi
     state: frame
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Rock
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 70
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/break_stone.ogg
+          params:
+            volume: -6
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          CEStoneBlock1:
+            min: 1
+            max: 2
+      - !type:DoActsBehavior
+        acts: ["Destruction"]
+  - type: Construction
+    graph: CEWallStoneBrick
+    node: CEWallFrameStoneBrick
 
 - type: entity
-  id: CEWallStonebrick
+  id: CEWallStoneBrick
   name: stone brick wall
   parent: CEBaseWall
   components:
@@ -23,10 +47,33 @@
     sprite: _CE/Structures/Walls/bricks_stone_wall.rsi
   - type: IconSmooth
     base: stonebricks
-  #- type: CEWallpaperHolder
+  - type: Damageable
+    damageContainer: StructuralInorganic
+    damageModifierSet: Rock
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 70
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/break_stone.ogg
+          params:
+            volume: -6
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          CEStoneBlock1:
+            min: 1
+            max: 2
+      - !type:ChangeConstructionNodeBehavior
+        node: CEWallFrameStoneBrick
+  - type: Construction
+    graph: CEWallStoneBrick
+    node: CEWallStoneBrick
 
 - type: entity
-  id: CEWallStonebrickOld
+  id: CEWallStoneBrickOld
   name: old stone brick wall
   parent: CEBaseWall
   components:
@@ -38,7 +85,7 @@
     base: stonebricks
 
 - type: entity
-  id: CEWallStonebrickBrown
+  id: CEWallStoneBrickBrown
   name: brown stone brick wall
   parent: CEBaseWall
   components:
