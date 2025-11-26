@@ -19,3 +19,5 @@ ce-ambition-abstract-theme-7 = молчание
 ce-ambition-abstract-theme-8 = магическая энергия
 ce-ambition-abstract-theme-9 = кровь и насилие
 ce-ambition-abstract-theme-10 = вода
+ce-ambition-abstract-theme-11 = трава
+ce-ambition-abstract-theme-12 = деньги

@@ -19,3 +19,5 @@ ce-ambition-abstract-theme-7 = silence
 ce-ambition-abstract-theme-8 = magical energy
 ce-ambition-abstract-theme-9 = blood and violence
 ce-ambition-abstract-theme-10 = water
+ce-ambition-abstract-theme-11 = grass
+ce-ambition-abstract-theme-12 = money
