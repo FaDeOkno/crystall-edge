@@ -20,6 +20,6 @@
     type: Fix
   - message: The roof of the guard building is now locked on the Shaar map.
     type: Fix
-  id: 1001
-  time: '2025-06-04T18:40:15.0000000+00:00'
+  id: 1002
+  time: '2025-06-06T18:40:15.0000000+00:00'
   url: https://github.com/crystallpunk-14/crystall-punk-14/pull/1359
