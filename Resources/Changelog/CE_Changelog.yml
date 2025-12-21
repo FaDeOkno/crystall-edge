@@ -174,3 +174,23 @@
   id: 1018
   time: '2025-12-21T17:45:47.0000000+00:00'
   url: https://github.com/crystallpunk-14/crystall-edge/pull/170
+- author: TheShuEd
+  changes:
+  - message: Crystal lanterns added! Crystal shards work as batteries for this lamp.
+      All references to standard ss14 lanterns and power cells have been removed.
+    type: Add
+  - message: The mana glove no longer attracts or repels on use.
+    type: Remove
+  - message: Green roof tiles have been added. The roof of the tavern on Shaar is
+      now green.
+    type: Add
+  - message: Energy crystals are now destroyed by a lack or excess of energy! An excess
+      of energy causes a standard burst of radiation.
+    type: Add
+  - message: "Energy cells have been added \u2014 crystal shards encased in brass\
+      \ to protect them from accidental breakage. Used by default in lanterns. Can\
+      \ be purchased in the store."
+    type: Add
+  id: 1019
+  time: '2025-12-21T17:52:57.0000000+00:00'
+  url: https://github.com/crystallpunk-14/crystall-edge/pull/171
